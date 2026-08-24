@@ -1,28 +1,24 @@
 import asyncio
 import sys
+import os
 import aioconsole
 from playwright.async_api import async_playwright, Page, BrowserContext
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
+import httpx
 
 
-print("""
-  ██████╗  ██████╗  ███████╗ ███╗   ██╗ ███████╗  ██████╗  ██████╗  ██████╗  ███████╗
- ██╔═══██╗ ██╔══██╗ ██╔════╝ ████╗  ██║ ██╔════╝ ██╔════╝ ██╔═══██╗ ██╔══██╗ ██╔════╝
- ██║   ██║ ██████╔╝ █████╗   ██╔██╗ ██║ ███████╗ ██║      ██║   ██║ ██████╔╝ █████╗
- ██║   ██║ ██╔═══╝  ██╔══╝   ██║╚██╗██║ ╚════██║ ██║      ██║   ██║ ██╔═══╝  ██╔══╝
- ╚██████╔╝ ██║      ███████╗ ██║ ╚████║ ███████║ ╚██████╗ ╚██████╔╝ ██║      ███████╗
-  ╚═════╝  ╚═╝      ╚══════╝ ╚═╝  ╚═══╝ ╚══════╝  ╚═════╝  ╚═════╝  ╚═╝      ╚══════╝
+os.system('npx oh-my-logo "OpenScope" --palette-colors \'["#f8f9fa", "#e9ecef", "#dee2e6", "#ced4da", "#adb5bd"]\' --filled')
 
-by xenomorphed
+
+print("""by xenomorphed
 GitHub: https://github.com/xenomorphed
 """)
 
 
 console = Console()
 
-console = Console()
 
 class CLIBrowser:
     def __init__(self):
@@ -35,15 +31,32 @@ class CLIBrowser:
         """Инициализация браузера и создание базовой сессии."""
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(
-            headless=True, 
-            args=["--start-maximized"]
+            headless=True
         )
         self.context = await self.browser.new_context(no_viewport=True)
         self.page = await self.context.new_page()
 
     async def process_address_bar(self, user_input: str):
-        """ПЛЕЙСХОЛДЕР: Обработка введенного адреса."""
-        console.print(f"[bold #f8f9fa]User input:[/] {user_input}")
+        console.print(f"User input: {user_input}")
+        console.print("[bold]Working...[/]",end="\r")
+
+        url = user_input
+
+        try:
+            response = await self.page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            title = await self.page.title()
+
+            status = response.status if response else 504
+            console.print(" " * 40, end="\r")
+            console.print(f"[dim #adb5bd][{status}][/] [bold]{title}[/] {self.page.url}")
+
+            text = await self.page.inner_text("body")
+
+            with console.pager(): console.print(text)
+
+        except Exception as e:
+            console.print(" " * 40, end="\r")
+            console.print(f"[bold red]Failed to load:[/] {e}")
 
     async def close(self):
         """Безопасное и последовательное закрытие ресурсов без зависания."""
@@ -67,7 +80,8 @@ async def main():
     try:
         while True:
             # Используем асинхронный ввод вместо run_in_executor
-            user_input = await aioconsole.ainput("URL > ")
+            console.print("[dim #adb5bd][^C to exit] [? for help][/] ", end="")
+            user_input = await aioconsole.ainput("URL or command > ")
             
             address = user_input.strip()
             if not address:
