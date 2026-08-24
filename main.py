@@ -43,7 +43,7 @@ class CLIBrowser:
 
     async def process_address_bar(self, user_input: str):
         """ПЛЕЙСХОЛДЕР: Обработка введенного адреса."""
-        console.print(f"[bold yellow]User input:[/] {user_input}")
+        console.print(f"[bold #f8f9fa]User input:[/] {user_input}")
 
     async def close(self):
         """Безопасное и последовательное закрытие ресурсов без зависания."""
