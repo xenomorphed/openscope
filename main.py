@@ -20,6 +20,13 @@ GitHub: https://github.com/xenomorphed
 console = Console()
 
 
+# Console colors
+
+RED = "#ba1b1d"
+YELLOW = "#f0f600"
+GREEN = "#2dd881"
+
+
 class CLIBrowser:
     def __init__(self):
         self.playwright = None
@@ -37,7 +44,7 @@ class CLIBrowser:
         self.page = await self.context.new_page()
 
     async def process_address_bar(self, user_input: str):
-        console.print(f"User input: {user_input}")
+        console.print(user_input)
         console.print("[bold]Working...[/]",end="\r")
 
         url = user_input
@@ -48,15 +55,15 @@ class CLIBrowser:
 
             status = response.status if response else 504
             console.print(" " * 40, end="\r")
-            console.print(f"[dim #adb5bd][{status}][/] [bold]{title}[/] {self.page.url}")
+            console.print(f"[dim #adb5bd]{status}[/] [bold]{title}[/]")
 
-            text = await self.page.inner_text("body")
+            text = await self.page.content()
 
             with console.pager(): console.print(text)
 
         except Exception as e:
             console.print(" " * 40, end="\r")
-            console.print(f"[bold red]Failed to load:[/] {e}")
+            console.print(f"[bold {RED}]Failed to load:[/] {e}")
 
     async def close(self):
         """Безопасное и последовательное закрытие ресурсов без зависания."""
@@ -70,7 +77,7 @@ class CLIBrowser:
             if self.playwright:
                 await self.playwright.stop()
         except Exception as e:
-            console.print(f"[dim red]Could not open: {e}[/]")
+            console.print(f"[dim {RED}]Could not open: {e}[/]")
 
 
 async def main():
@@ -80,24 +87,21 @@ async def main():
     try:
         while True:
             # Используем асинхронный ввод вместо run_in_executor
-            console.print("[dim #adb5bd][^C to exit] [? for help][/] ", end="")
+            console.print("> [dim #ced4da]? for help[/] > ", end="")
             user_input = await aioconsole.ainput("URL or command > ")
             
             address = user_input.strip()
             if not address:
                 continue
 
-            if address.lower() in ["exit", "quit"]:
-                break
-
             await cli.process_address_bar(address)
 
     except (KeyboardInterrupt, asyncio.CancelledError):
         pass
     finally:
-        console.print("\n[bold yellow]Stopping...[/]")
+        console.print(f"\n[bold {YELLOW}]Stopping...[/]")
         await cli.close()
-        console.print("[bold green]Done.[/]")
+        console.print(f"[bold {GREEN}]Done.[/]")
 
 if __name__ == "__main__":
     try:
