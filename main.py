@@ -7,6 +7,8 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
 import httpx
+from urllib.parse import quote_plus
+from parsing import *
 
 
 os.system('npx oh-my-logo "OpenScope" --palette-colors \'["#f8f9fa", "#e9ecef", "#dee2e6", "#ced4da", "#adb5bd"]\' --filled')
@@ -44,10 +46,16 @@ class CLIBrowser:
         self.page = await self.context.new_page()
 
     async def process_address_bar(self, user_input: str):
-        console.print(user_input)
-        console.print("[bold]Working...[/]",end="\r")
 
-        url = user_input
+        url = ""
+
+        if user_input.startswith("/google "):
+            url = f"https://google.com/search?q={quote_plus(user_input.removeprefix('/google'))}"
+        else:
+            url = user_input
+
+        console.print(url)
+        console.print("[bold]Working...[/]",end="\r")
 
         try:
             response = await self.page.goto(url, wait_until="domcontentloaded", timeout=15000)
@@ -88,8 +96,8 @@ async def main():
         while True:
             # Используем асинхронный ввод вместо run_in_executor
             console.print("> [dim #ced4da]? for help[/] > ", end="")
-            user_input = await aioconsole.ainput("URL or command > ")
-            
+            user_input = str(await aioconsole.ainput("URL or command > "))
+
             address = user_input.strip()
             if not address:
                 continue
